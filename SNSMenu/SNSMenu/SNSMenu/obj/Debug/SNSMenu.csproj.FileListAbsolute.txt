@@ -1,0 +1,6 @@
+C:\Users\CAN\Desktop\SNSMenu\SNSMenu\SNSMenu\bin\Debug\SNSMenu.dll
+C:\Users\CAN\Desktop\SNSMenu\SNSMenu\SNSMenu\bin\Debug\SNSMenu.pdb
+C:\Users\CAN\Desktop\SNSMenu\SNSMenu\SNSMenu\obj\Debug\SNSMenu.csproj.AssemblyReference.cache
+C:\Users\CAN\Desktop\SNSMenu\SNSMenu\SNSMenu\obj\Debug\SNSMenu.csproj.CoreCompileInputs.cache
+C:\Users\CAN\Desktop\SNSMenu\SNSMenu\SNSMenu\obj\Debug\SNSMenu.dll
+C:\Users\CAN\Desktop\SNSMenu\SNSMenu\SNSMenu\obj\Debug\SNSMenu.pdb
