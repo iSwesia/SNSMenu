@@ -19,6 +19,10 @@ This project is developed strictly for **educational and research purposes**. Th
 * This project is **not** affiliated with, endorsed by, or sponsored by **Habupain** or the official *Saiko no Sutoka* development team. All rights regarding the game assets belong to their respective owners.
 
 
+# 🛡️ **VirusTotal Scan** 
+[Click Here to View Scan Results](https://www.virustotal.com/gui/file/8652ae60b22c93f74b2a4a9ea41d02570dd11a7af18417ed44522c9462c891d5?nocache=1)
+
+
 ## English Description
 Based cheat menu for **Saiko no Sutoka**.  
 
