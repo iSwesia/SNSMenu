@@ -1,4 +1,4 @@
-# SNS Menu v1.0
+# SNS Menu v1.0.1
 
 ## ⚠️ Legal Disclaimer & Liability Notice
 
@@ -48,6 +48,7 @@ This menu automatically detects your system language (TR/EN).
     * No Darkness (Fullbright + Day Skybox)
     * Force Unlock (Open locked doors without keys)
     * Equip Shoes (Wear shoes immediately)
+    * Unlock Nightmare Mod (Unlocks nightmare difficulty in mainmenu)
 * **Settings:**
     * Menu key (Bind custom menu toggle key)
     * Select language (Choose language TR/EN)
@@ -83,6 +84,8 @@ Menü sistem dilinizi otomatik algılar (TR/EN).
     * Kan efektini sil (Hasar aldığın zaman kan efektini kaldır)
     * Karanlığı kapat (Etrafı aydılatır)
     * Kilidi zorla (Kilitli kapıları kilitsiz açmayı sağlar)
+    * Ayakkabıları Giy (Ayakkabıları otomatik giyer, bulmanıza gerek yok)
+    * Kabus Modunu Aç (Kilitli olan "Kabus" zorluğunu etkinleştirirsiniz)
 * **Settings (Ayarlar):**
     * Menü tuşu atama
     * Dil seçimi
