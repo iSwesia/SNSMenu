@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Unity.IL2CPP;
+using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.AI;
@@ -8,16 +9,24 @@ using UnityEngine.SceneManagement;
 using System;
 using System.Collections.Generic;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using System.Diagnostics;
 
 namespace SaikoMenu
 {
     [BepInPlugin("com.saiko.menu", "SNS Menu", SaikoMod.MOD_VERSION)]
     public class SaikoMod : BepInEx.Unity.IL2CPP.BasePlugin
     {
-        public const string MOD_VERSION = "1.0.1";
+        public const string MOD_VERSION = "1.0.2";
+
+        public static ConfigEntry<KeyCode> MenuKeyConfig;
+        public static SaikoMod Instance;
 
         public override void Load()
         {
+            Instance = this;
+
+            MenuKeyConfig = Config.Bind("General", "MenuKey", KeyCode.F1, "Key to open the menu.");
+
             ClassInjector.RegisterTypeInIl2Cpp<MasterHandler>();
 
             GameObject go = new GameObject("SNSMenu");
@@ -85,14 +94,18 @@ namespace SaikoMenu
         private bool godMode = false;
         private bool shoesWorn = false;
 
+        private bool noClip = false;
+        private bool wasNoClip = false;
+
         private bool rearView = false;
         private KeyCode rearKey = KeyCode.V;
         private bool isRebindingRear = false;
         private bool freezeSaiko = false, wasFrozen = false;
         private bool removeVignette = false, removeBlood = false;
 
-        private KeyCode menuKey = KeyCode.F1;
+        // private KeyCode menuKey = KeyCode.F1;
         private bool isRebinding = false;
+        private bool isRebindingStartup = false;
         private int selectedLang = 1;
         private string notificationMsg = "";
         private float notificationTimer = 0f;
@@ -151,25 +164,43 @@ namespace SaikoMenu
 
         void ResetCache()
         {
-            _cachedPlayer = null; _cachedInteractManager = null; _mouseLookObj = null; _whiteTexture = null;
-            _cachedEyeVignette = null; _cachedBloodFX = null; _cachedDirLight = null;
-            currentTarget = null; currentDynamicComp = null;
+            _cachedPlayer = null;
+            _cachedInteractManager = null;
+            _mouseLookObj = null;
+            _whiteTexture = null;
+            _cachedEyeVignette = null;
+            _cachedBloodFX = null;
+            _cachedDirLight = null;
+            currentTarget = null;
+            currentDynamicComp = null;
             hasStoredDefaults = false;
-            targets.Clear(); keyTargets.Clear(); pageTargets.Clear(); diaryTargets.Clear();
-            volumetricObjects.Clear(); mirrorObjects.Clear();
+            targets.Clear();
+            keyTargets.Clear();
+            pageTargets.Clear();
+            diaryTargets.Clear();
+            volumetricObjects.Clear();
+            mirrorObjects.Clear();
             DestroyRearCamera();
-            shoesWorn = false; freezeSaiko = false; wasFrozen = false;
-            removeVignette = false; removeBlood = false;
-            speedEnabled = false; wasSpeedEnabled = false;
-            rearView = false; isRebindingRear = false;
-            noHold = false; interactCooldown = 0f;
+            shoesWorn = false;
+            freezeSaiko = false;
+            wasFrozen = false;
+            removeVignette = false;
+            removeBlood = false;
+            speedEnabled = false;
+            wasSpeedEnabled = false;
+            rearView = false;
+            isRebindingRear = false;
+            noHold = false;
+            interactCooldown = 0f;
+            noClip = false;
+            wasNoClip = false;
         }
 
         void Update()
         {
             if (showStartupMsg) return;
 
-            if (Input.GetKeyDown(menuKey) && !isRebinding && !isRebindingRear) showGUI = !showGUI;
+            if (Input.GetKeyDown(SaikoMod.MenuKeyConfig.Value) && !isRebinding && !isRebindingRear) showGUI = !showGUI;
             if (!isRebinding && !isRebindingRear && Input.GetKeyDown(rearKey)) rearView = !rearView;
 
             if (notificationTimer > 0) notificationTimer -= Time.deltaTime;
@@ -177,6 +208,8 @@ namespace SaikoMenu
 
             if (SceneManager.GetActiveScene().name == "LevelNew")
             {
+                HandleNoClipLogic();
+
                 slowUpdateTimer += Time.deltaTime;
                 if (slowUpdateTimer >= SLOW_UPDATE_RATE)
                 {
@@ -184,6 +217,9 @@ namespace SaikoMenu
                     {
                         RefreshTargets();
                     }
+
+                    if (noClip) ProcessNoClip(true);
+
                     slowUpdateTimer = 0f;
                 }
 
@@ -202,14 +238,61 @@ namespace SaikoMenu
             }
         }
 
+        void HandleNoClipLogic()
+        {
+            if (noClip != wasNoClip)
+            {
+                ProcessNoClip(noClip);
+                wasNoClip = noClip;
+            }
+        }
+
+        void ProcessNoClip(bool ignore)
+        {
+            if (_cachedPlayer == null) _cachedPlayer = GameObject.Find("FPSPLAYER");
+            if (_cachedPlayer == null) return;
+
+            Collider playerCol = _cachedPlayer.GetComponent<Collider>();
+            if (playerCol == null)
+            {
+                var cc = _cachedPlayer.GetComponent<CharacterController>();
+                if (cc != null) playerCol = cc.TryCast<Collider>();
+            }
+
+            if (playerCol == null) return;
+
+            var allCols = GameObject.FindObjectsOfType<Collider>();
+            foreach (var col in allCols)
+            {
+                if (col == playerCol) continue;
+
+                string objName = col.name.ToLower();
+                string parentName = "";
+                if (col.transform.parent != null)
+                    parentName = col.transform.parent.name.ToLower();
+
+                bool isWalkable =
+                    objName.Contains("floor") ||
+                    objName.Contains("ground") ||
+                    objName.Contains("stairs") ||
+                    parentName.Contains("stairs") ||
+                parentName.Contains("floor");
+
+                if (!isWalkable)
+                {
+                    Physics.IgnoreCollision(playerCol, col, ignore);
+                }
+            }
+        }
+
         void RefreshTargets()
         {
             targets.Clear();
             keyTargets.Clear();
             pageTargets.Clear();
             diaryTargets.Clear();
-            volumetricObjects.Clear();
-            mirrorObjects.Clear();
+            if (!disableVolumetrics) volumetricObjects.Clear();
+            if (!disableMirrors) mirrorObjects.Clear();
 
             var agents = GameObject.FindObjectsOfType<NavMeshAgent>();
             foreach (var agent in agents)
@@ -237,15 +320,26 @@ namespace SaikoMenu
 
                 CheckItem(obj);
 
-                if (disableVolumetrics && obj.name.StartsWith("SHW_Add_effect"))
-                {
-                    if (!volumetricObjects.Contains(obj)) volumetricObjects.Add(obj);
-                }
-
                 if (disableMirrors && obj.name.StartsWith("Mirror"))
                 {
                     if (!mirrorObjects.Contains(obj)) mirrorObjects.Add(obj);
                 }
+            }
+
+            if (disableVolumetrics)
+            {
+                var allRenderers = GameObject.FindObjectsOfType<MeshRenderer>();
+                foreach (var rend in allRenderers)
+                {
+                    GameObject volObj = rend.gameObject;
+                    string n = volObj.name;
+
+                    if (n.StartsWith("SHW_Add_effect"))
+                    {
+                        if (!volumetricObjects.Contains(volObj)) volumetricObjects.Add(volObj);
+                    }
+                }
+
             }
         }
 
@@ -323,6 +417,7 @@ namespace SaikoMenu
             else if (wasVolumetricsDisabled)
             {
                 foreach (var vol in volumetricObjects) { if (vol != null && !vol.activeSelf) vol.SetActive(true); }
+                volumetricObjects.Clear();
                 wasVolumetricsDisabled = false;
             }
         }
@@ -547,9 +642,23 @@ namespace SaikoMenu
             {
                 GUI.color = Color.white;
                 GUI.Box(new Rect(0, 0, Screen.width, Screen.height), "");
-                float boxW = 400, boxH = 200;
+                float boxW = 400, boxH = 250;
                 Rect msgRect = new Rect((Screen.width - boxW) / 2, (Screen.height - boxH) / 2, boxW, boxH);
                 GUI.Window(99, msgRect, (Action<int>)DrawStartupModal, $"SNS Menu v{SaikoMod.MOD_VERSION}");
+
+                if (isRebindingStartup)
+                {
+                    foreach (KeyCode k in Enum.GetValues(typeof(KeyCode)))
+                    {
+                        if (Input.GetKeyDown(k) && k != KeyCode.Mouse0)
+                        {
+                            SaikoMod.MenuKeyConfig.Value = k; ;
+                            SaikoMod.Instance.Config.Save();
+                            isRebindingStartup = false;
+                            break;
+                        }
+                    }
+                }
                 return;
             }
 
@@ -595,14 +704,23 @@ namespace SaikoMenu
         {
             GUI.skin.label.alignment = TextAnchor.MiddleCenter;
             GUI.skin.label.fontSize = 16;
+            string keyName = SaikoMod.MenuKeyConfig.Value.ToString();
             string msg = selectedLang == 0 ?
-                $"\nSNS Menu v{SaikoMod.MOD_VERSION} Yüklendi!\n\nMenüyü aktif etmek için F1 tuşuna basın.\n(Tuşu menüden değiştirebilirsiniz)" :
-                $"\nSNS Menu v{SaikoMod.MOD_VERSION} Loaded!\n\nPress F1 to open GUI.\n(You can change keybind in menu)";
+                $"\nSNS Menu v{SaikoMod.MOD_VERSION} Yüklendi!\n\nMenüyü açmak için gereken tuş: <b>{keyName}</b>\nBu tuşu aşağıdan değiştirebilirsiniz." :
+                $"\nSNS Menu v{SaikoMod.MOD_VERSION} Loaded!\n\nCurrent Menu Key: <b>{keyName}</b>\nYou can change it below.";
 
             string btnText = selectedLang == 0 ? "TAMAM" : "OK";
+            string changeText = selectedLang == 0 ? "Tuşu ata" : "Change Keybind";
             GUILayout.Label(msg);
+            GUILayout.Space(15);
+            string btnDisplay = isRebindingStartup ? "..." : $"[{keyName}]";
+            if (GUILayout.Button(changeText + " " + btnDisplay, GUILayout.Height(30)))
+            {
+                isRebindingStartup = true;
+            }
             GUILayout.Space(20);
-            if (GUILayout.Button(btnText, GUILayout.Height(30))) showStartupMsg = false;
+
+            if (GUILayout.Button(btnText, GUILayout.Height(30))) { if (!isRebindingStartup) showStartupMsg = false; }
         }
 
         void DrawMenu(int windowID)
@@ -634,6 +752,7 @@ namespace SaikoMenu
                         GUILayout.EndHorizontal();
                     }
                     godMode = GUILayout.Toggle(godMode, isTR ? " Ölümsüzlük" : " God Mode");
+                    noClip = GUILayout.Toggle(noClip, isTR ? " Duvarlardan Geç" : "No Clip");
                     noHold = GUILayout.Toggle(noHold, isTR ? " Basılı Tutma Yok" : " No KeyHold");
                     GUILayout.BeginHorizontal();
                     rearView = GUILayout.Toggle(rearView, isTR ? " Dikiz Aynası" : " Back View Cam");
@@ -687,12 +806,12 @@ namespace SaikoMenu
                 case 5: // SETTINGS
                     GUI.color = Color.white;
                     GUILayout.Label(isTR ? "Menü Tuşu:" : "Menu Key:");
-                    if (GUILayout.Button(isRebinding ? "..." : menuKey.ToString())) isRebinding = true;
+                    if (GUILayout.Button(isRebinding ? "..." : SaikoMod.MenuKeyConfig.Value.ToString())) isRebinding = true;
                     if (isRebinding)
                     {
                         foreach (KeyCode k in Enum.GetValues(typeof(KeyCode)))
                         {
-                            if (Input.GetKeyDown(k) && k != KeyCode.Mouse0) { menuKey = k; isRebinding = false; break; }
+                            if (Input.GetKeyDown(k) && k != KeyCode.Mouse0) { SaikoMod.MenuKeyConfig.Value = k; SaikoMod.Instance.Config.Save(); isRebinding = false; break; }
                         }
                     }
                     GUILayout.Space(10);
