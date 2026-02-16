@@ -1,4 +1,4 @@
-# SNS Menu v1.0.1
+# SNS Menu v1.0.2
 
 ## ⚠️ Legal Disclaimer & Liability Notice
 
@@ -36,6 +36,7 @@ This menu automatically detects your system language (TR/EN).
 * **Player:**
     * Speed Hack (Adjustable speed)
     * God Mode (Invincibility)
+    * No Clip (Run through walls)
     * No Hold (Instant Interact & Unlock)
     * Rear View Camera (Rear mirror)
 * **ESP:**
@@ -73,6 +74,7 @@ Menü sistem dilinizi otomatik algılar (TR/EN).
 * **Player (Oyuncu Modları):**
     * Hız Ayarı (Oyuncu hareket hızı)
     * Ölümsüzlük
+    * Duvardan geçme
     * Basılı tutmadan etkileşim
     * Dikiz aynası (Arka kamera)
 * **ESP (Wallhack):**
