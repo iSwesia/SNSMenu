@@ -1,3 +1,5 @@
+![Status](https://img.shields.io/badge/Status-Working-brightgreen)
+
 # SNS Menu v1.0.2
 
 ## ⚠️ Legal Disclaimer & Liability Notice
