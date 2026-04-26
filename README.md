@@ -1,10 +1,6 @@
-<div align="center">
-  <img src="https://img.shields.io/badge/STATUS-WORKING-brightgreen?style=for-the-badge&logo=github&logoColor=white" height="45">
-  <br>
-  <p align="center">
-    <b>Working</b>
-  </p>
-</div>
+<h1 align="center">
+  <span color="green">●</span> Status: <span style="color: #2ea44f;">Working</span>
+</h1>
 
 # SNS Menu v1.0.2
 
