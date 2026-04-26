@@ -1,4 +1,10 @@
-![Status](https://v-subhash.github.io/static-badges/badges/status-working.svg)
+<div align="center">
+  <img src="https://img.shields.io/badge/STATUS-WORKING-brightgreen?style=for-the-badge&logo=github&logoColor=white" height="45">
+  <br>
+  <p align="center">
+    <b>Working</b>
+  </p>
+</div>
 
 # SNS Menu v1.0.2
 
