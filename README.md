@@ -1,4 +1,4 @@
-![Status](https://img.shields.io/badge/Status-Working-brightgreen)
+![Status](https://v-subhash.github.io/static-badges/badges/status-working.svg)
 
 # SNS Menu v1.0.2
 
