@@ -1,6 +1,6 @@
-<h1 align="center">
-  <span color="green">●</span> Status: <span style="color: #2ea44f;">Working</span>
-</h1>
+<div align="center">
+  <h3>Status: $\color{green}{\textsf{Working}}$</h3>
+</div>
 
 # SNS Menu v1.0.2
 
